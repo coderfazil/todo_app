@@ -14,6 +14,7 @@ function LoginPage() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
     const nextErrors = {};
@@ -46,10 +47,13 @@ function LoginPage() {
     }
 
     try {
+      setIsSubmitting(true);
       await login(values);
       navigate("/dashboard");
     } catch (error) {
       setApiError(error.response?.data?.message || "Login failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,6 +79,8 @@ function LoginPage() {
       onChange={handleChange}
       onSubmit={handleSubmit}
       submitLabel="Login"
+      isSubmitting={isSubmitting}
+      loadingLabel="Logging in..."
       footerText="Need an account?"
       footerLink="/register"
       footerLabel="Register"

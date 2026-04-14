@@ -15,6 +15,7 @@ function RegisterPage() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
     const nextErrors = {};
@@ -53,10 +54,13 @@ function RegisterPage() {
     }
 
     try {
+      setIsSubmitting(true);
       await register(values);
       navigate("/dashboard");
     } catch (error) {
       setApiError(error.response?.data?.message || "Registration failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -88,6 +92,8 @@ function RegisterPage() {
       onChange={handleChange}
       onSubmit={handleSubmit}
       submitLabel="Register"
+      isSubmitting={isSubmitting}
+      loadingLabel="Creating account..."
       footerText="Already have an account?"
       footerLink="/login"
       footerLabel="Login"

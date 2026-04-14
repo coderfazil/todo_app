@@ -8,6 +8,8 @@ function AuthForm({
   onChange,
   onSubmit,
   submitLabel,
+  isSubmitting,
+  loadingLabel,
   footerText,
   footerLink,
   footerLabel,
@@ -28,13 +30,14 @@ function AuthForm({
                 placeholder={field.placeholder}
                 value={values[field.name]}
                 onChange={onChange}
+                disabled={isSubmitting}
               />
               {errors[field.name] ? <small>{errors[field.name]}</small> : null}
             </label>
           ))}
           {apiError ? <div className="form-error">{apiError}</div> : null}
-          <button className="primary-button" type="submit">
-            {submitLabel}
+          <button className="primary-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? loadingLabel || "Please wait..." : submitLabel}
           </button>
         </form>
         <p className="auth-footer">
