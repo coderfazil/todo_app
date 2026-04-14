@@ -5,15 +5,17 @@ export const generateToken = (userId) =>
     expiresIn: "7d",
   });
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const getCookieOptions = () => ({
   httpOnly: true,
-  sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction,
   maxAge: 7 * 24 * 60 * 60 * 1000,
 });
 
 export const getClearCookieOptions = () => ({
   httpOnly: true,
-  sameSite: "lax",
-  secure: process.env.NODE_ENV === "production",
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction,
 });
