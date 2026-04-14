@@ -20,6 +20,12 @@ function DashboardPage() {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [taskActionState, setTaskActionState] = useState({
+    taskId: "",
+    action: "",
+  });
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -58,16 +64,20 @@ function DashboardPage() {
     }
 
     try {
+      setIsCreating(true);
       const task = await createTask({ title: newTask });
       setTasks((current) => [task, ...current]);
       setNewTask("");
     } catch (createError) {
       setError(createError.response?.data?.message || "Could not add task");
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleToggle = async (task) => {
     try {
+      setTaskActionState({ taskId: task._id, action: "toggle" });
       const updatedTask = await updateTask(task._id, {
         completed: !task.completed,
       });
@@ -76,15 +86,20 @@ function DashboardPage() {
       );
     } catch (updateError) {
       setError(updateError.response?.data?.message || "Could not update task");
+    } finally {
+      setTaskActionState({ taskId: "", action: "" });
     }
   };
 
   const handleDelete = async (taskId) => {
     try {
+      setTaskActionState({ taskId, action: "delete" });
       await deleteTask(taskId);
       setTasks((current) => current.filter((task) => task._id !== taskId));
     } catch (deleteError) {
       setError(deleteError.response?.data?.message || "Could not delete task");
+    } finally {
+      setTaskActionState({ taskId: "", action: "" });
     }
   };
 
@@ -97,6 +112,7 @@ function DashboardPage() {
     }
 
     try {
+      setTaskActionState({ taskId, action: "save" });
       const updatedTask = await updateTask(taskId, { title: editValue });
       setTasks((current) =>
         current.map((task) => (task._id === taskId ? updatedTask : task))
@@ -105,13 +121,38 @@ function DashboardPage() {
       setEditValue("");
     } catch (updateError) {
       setError(updateError.response?.data?.message || "Could not edit task");
+    } finally {
+      setTaskActionState({ taskId: "", action: "" });
     }
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+      navigate("/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="page-shell">
+        <div className="dashboard">
+          <div className="loading-panel">
+            <div className="loading-spinner" aria-hidden="true" />
+            <div>
+              <p className="eyebrow">Task Dashboard</p>
+              <h2>Loading your tasks</h2>
+              <p>Fetching the latest items from your account.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell">
@@ -122,8 +163,13 @@ function DashboardPage() {
             <h1>{user?.name}'s To-Do List</h1>
             <p>{user?.email}</p>
           </div>
-          <button className="secondary-button" type="button" onClick={handleLogout}>
-            Logout
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? "Logging out..." : "Logout"}
           </button>
         </header>
 
@@ -135,6 +181,8 @@ function DashboardPage() {
               onChange={(event) => setNewTask(event.target.value)}
               onSubmit={handleAddTask}
               submitLabel="Add Task"
+              isSubmitting={isCreating}
+              loadingLabel="Adding..."
               placeholder="What needs to be done?"
             />
             {error ? <div className="form-error">{error}</div> : null}
@@ -169,8 +217,7 @@ function DashboardPage() {
 
           <div className="panel">
             <h2>Your tasks</h2>
-            {loading ? <p>Loading tasks...</p> : null}
-            {!loading && filteredTasks.length === 0 ? (
+            {!filteredTasks.length ? (
               <p>No tasks found for this filter.</p>
             ) : null}
             <div className="task-list">
@@ -192,6 +239,10 @@ function DashboardPage() {
                     setEditTaskId(task._id);
                     setEditValue(task.title);
                   }}
+                  isBusy={taskActionState.taskId === task._id}
+                  busyAction={
+                    taskActionState.taskId === task._id ? taskActionState.action : ""
+                  }
                 />
               ))}
             </div>
