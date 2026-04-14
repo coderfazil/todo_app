@@ -18,7 +18,7 @@ function AuthForm({
   return (
     <div className="auth-layout">
       <div className="auth-panel">
-        <p className="eyebrow">MERN To-Do Application</p>
+        <p className="eyebrow">To-Do Application</p>
         <h1>{title}</h1>
         <form className="auth-form" onSubmit={onSubmit}>
           {fields.map((field) => (
